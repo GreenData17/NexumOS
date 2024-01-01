@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Cosmos.System.FileSystem;
 using Cosmos.System.FileSystem.VFS;
@@ -37,7 +38,7 @@ namespace NexumOS
                 xClient.Connect(DNSConfig.DNSNameservers[0]); //DNS Server address
 
                 /** Send DNS ask for a single domain name **/
-                xClient.SendAsk("example.com");
+                xClient.SendAsk("repo.greendata.dev");
 
                 /** Receive DNS Response **/
                 destination = xClient.Receive(); //can set a timeout value
@@ -56,45 +57,106 @@ namespace NexumOS
                 string messageToSend = "";
 
                 byte[] buffer = new byte[2048];
-                byte[] request = Encoding.ASCII.GetBytes("GET / HTTP/1.1\r\nHost: example.com\r\n\r\n");
+                byte[] request = Encoding.ASCII.GetBytes("GET /nexum/test HTTP/1.1\r\nHost: repo.greendata.dev\r\n\r\n");
                 stream.Write(request, 0, request.Length);
-                // stream.Flush(); // -- DO NOT FLUSH BEFORE READING, 4 DAYS WASTED. TODO: CHANGE PERSONAL DUCKUMENTATION! --
                 Console.WriteLine("Request Send!");
 
+                bool respondIsLongerThenDefault = false;
                 do
                 {
                     int bytes = stream.Read(buffer, 0, buffer.Length);
-                    string receivedString = Encoding.UTF8.GetString(buffer, 0, bytes);
+                    string receivedString = Encoding.ASCII.GetString(buffer, 0, bytes);
                     fullRespond.Add(receivedString);
                     Console.WriteLine("Respond Received:");
-                    Console.WriteLine(receivedString);
+
+                    if(!respondIsLongerThenDefault)
+                        foreach (string s in receivedString.Split("\n"))
+                        {
+                            if (s.Contains("Content-Length:"))
+                            {
+                                string numberTemp = s.Replace("Content-Length: ", "");
+                                string number = "";
+
+                                foreach (char c in numberTemp)
+                                {
+                                    if (char.IsDigit(c)) number += c;
+                                }
+
+                                int bufferSize;
+                                int.TryParse(number, out bufferSize);
+                                Console.WriteLine("length " + bufferSize);
+                                Console.Write(s);
+
+                                if (bufferSize > buffer.Length) 
+                                    respondIsLongerThenDefault = true;
+                            }
+
+                            if (s.Contains("Transfer-Encoding: chunked"))
+                            {
+                                respondIsLongerThenDefault = true;
+                                Console.WriteLine("chunk");
+                            }
+
+                            fullRespond.Add(s);
+                        }
+
+                    if (!respondIsLongerThenDefault) break;
+
+                    if (!client.Connected) break;
 
 
-                    if (receivedString.Contains("</html>")) break;
-                } while(true);
-
-                // stream.Flush(); // flush doesn't work in general TT
+                } while (true) ;
 
                 Console.WriteLine("Finished receiving!");
-                File.WriteAllLines(@"0:\test.txt", fullRespond.ToArray());
+
+                fullRespond.RemoveAt(fullRespond.Count - 1);
+
+                bool headerPassed = false; // small info -> the header is 18 lines long + 1 for the seperation line
+                string fullText = "";
+                for (int i = 0; i < fullRespond.Count; i++)
+                {
+                    if (!headerPassed && string.IsNullOrWhiteSpace(fullRespond[i]))
+                    {
+                        headerPassed = true;
+                        continue;
+                    }
+
+                    if(!headerPassed) continue;
+
+
+                    fullText += fullRespond[i];
+                    if (i < fullRespond.Count - 1)
+                    {
+                        fullText += "\r\n";
+                    }
+                }
+
+                File.Delete(@"0:\package-info.conf");
+                File.WriteAllBytes(@"0:\package-info.conf", Encoding.ASCII.GetBytes(fullText));
                 Console.WriteLine("FileCreated!");
+
+                Console.WriteLine("====================");
+                Console.WriteLine(File.ReadAllText(@"0:\package-info.conf"));
+                Console.WriteLine("====================");
             }
 
 
-            foreach (string file in Directory.GetFiles(@"0:\"))
-            {
-                Console.WriteLine(file);
-            }
+            //foreach (string file in Directory.GetFiles(@"0:\"))
+            //{
+            //    Console.WriteLine(file);
+            //}
 
-            Console.WriteLine("Cosmos booted successfully. Type a line of text to get it echoed back.");
+            //Console.WriteLine("Cosmos booted successfully. Type a line of text to get it echoed back.");
         }
 
         protected override void Run()
         {
-            Console.Write("Input: ");
-            var input = Console.ReadLine();
-            Console.Write("Text typed: ");
-            Console.WriteLine(input);
+            //Console.Write("Input: ");
+            //var input = Console.ReadLine();
+            //Console.Write("Text typed: ");
+            //Console.WriteLine(input);
         }
+
+        
     }
 }
