@@ -29,52 +29,7 @@ namespace NexumOS
             Console.WriteLine(File.ReadAllText(@"0:\Hello.txt"));
 
             NetworkManager.RequestIpAddress();
-
             Console.WriteLine("IP: " + NetworkConfiguration.CurrentAddress.ToString());
-
-            using (HttpRequest request = new())
-            {
-                request.SetHost("repo.greendata.dev");
-                request.SetPath("/nexum/base");
-
-                request.Send();  // TODO: from this point file writing breaks!
-
-                HttpRespond respond = new(request.GetStream());
-                respond.ReceiveFile(@"0:\package-info.conf");
-            }
-
-            
-
-            //List<string> newLines = new List<string>();
-            //foreach (string line in File.ReadAllLines(@"0:\package-info.conf"))
-            //{
-            //    if(String.IsNullOrWhiteSpace(line)) continue;
-            //    newLines.Add(line);
-            //}
-
-            //Console.WriteLine("Finished parsing!");
-
-            //if(File.Exists(@"0:\package-info.conf"))
-            //    File.Delete(@"0:\package-info.conf");
-
-            //File.WriteAllLines(@"0:\package-info.conf", newLines);
-
-
-            
-
-
-            //Console.WriteLine("====================");
-            //Console.WriteLine(File.ReadAllText(@"0:\package-info.conf"));
-            //Console.WriteLine("====================");
-            //}
-
-
-            //foreach (string file in Directory.GetFiles(@"0:\"))
-            //{
-            //    Console.WriteLine(file);
-            //}
-
-            //Console.WriteLine("Cosmos booted successfully. Type a line of text to get it echoed back.");
         }
 
         protected override void Run()

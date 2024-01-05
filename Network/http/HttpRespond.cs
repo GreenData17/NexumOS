@@ -87,10 +87,10 @@ namespace NexumOS.Network.http
             Console.WriteLine("Attempting to Write File... [ " + path + " ]");
 
             byte[] bytesToWrite = _receivedBytes.ToArray();
-            //File.WriteAllBytes(path, bytesToWrite);
+            
             try
             {
-                File.WriteAllText(path, "hello");
+                File.WriteAllBytes(path, bytesToWrite);
             }
             catch (Exception e)
             {

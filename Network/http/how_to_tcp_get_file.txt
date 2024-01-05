@@ -1,0 +1,19 @@
+﻿if (File.Exists(@"0:\package-info.conf"))
+                File.Delete(@"0:\package-info.conf");
+
+            NetworkManager.RequestIpAddress();
+
+            Console.WriteLine("IP: " + NetworkConfiguration.CurrentAddress.ToString());
+
+            using (HttpRequest request = new())
+            {
+                request.SetHost("repo.greendata.dev");
+                request.SetPath("/nexum/base");
+
+                request.Send();  // TODO: from this point file writing breaks!
+
+                HttpRespond respond = new(request.GetStream());
+                respond.ReceiveFile(@"0:\package-info.conf");
+            }
+
+            Console.WriteLine(File.ReadAllText(@"0:\package-info.conf"));
