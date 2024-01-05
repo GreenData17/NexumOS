@@ -29,7 +29,7 @@ namespace NexumOS
             Console.WriteLine(File.ReadAllText(@"0:\Hello.txt"));
 
             NetworkManager.RequestIpAddress();
-            Console.WriteLine("IP: " + NetworkConfiguration.CurrentAddress.ToString());
+            Console.WriteLine("IP: " + NetworkConfiguration.CurrentAddress);
         }
 
         protected override void Run()
