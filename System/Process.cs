@@ -6,6 +6,10 @@ namespace NexumOS.System
 {
     public class Process
     {
+        public enum Priority { System, High, Mid, Low }
+
+        public Priority priority = Priority.Low;
+
         private byte[] _data;
         private byte[] _keyboardEvent;
 
@@ -27,6 +31,8 @@ namespace NexumOS.System
                 _keyboardEvent = new byte[data.Length - (SplitResult + 8)];
                 Array.Copy(data, SplitResult + 8, _keyboardEvent, 0, _keyboardEvent.Length);
             }
+
+            ProcessManager.AddProcess(this);
         }
 
         public void Execute()
@@ -36,24 +42,32 @@ namespace NexumOS.System
             if(pointer != 0)
                 pointer++;
 
-            if (pointer == _data.Length)
+            if (pointer >= _data.Length)
             {
                 Stop();
                 return;
             }
 
-            if (_data[pointer] == 0x03) // console command
+            ExecuteAt(_data, ref pointer);
+        }
+
+        private void ExecuteAt(byte[] data, ref uint pointer)
+        {
+            if (data[pointer] == 0x03) // console command
             {
-                if (_data[pointer + 1] == 0x01) // clear console
+                if (data[pointer + 1] == 0x01) // clear console
                 {
-                    // Console.Clear();
-                    pointer += 1;
+                    Console.SetCursorPosition((int)data[pointer + 2] - 1, (int)data[pointer + 3] - 1);
+                    Console.Write(" ");
+                    pointer += 3;
+                    return;
                 }
-                if (_data[pointer + 1] == 0x02) // set character at a certain position
+                if (data[pointer + 1] == 0x02) // set character at a certain position
                 {
-                    Console.SetCursorPosition((int)_data[pointer + 2] - 1, (int)_data[pointer + 3] - 1);
-                    Console.Write(Encoding.ASCII.GetChars(_data)[pointer + 4]);
+                    Console.SetCursorPosition((int)data[pointer + 2] - 1, (int)data[pointer + 3] - 1);
+                    Console.Write(Encoding.ASCII.GetChars(data)[pointer + 4]);
                     pointer += 4;
+                    return;
                 }
             }
         }
@@ -63,6 +77,7 @@ namespace NexumOS.System
             running = false;
             Console.WriteLine();
             Console.WriteLine("-- End of Code --");
+            ProcessManager.RemoveProcess(this);
         }
 
         public void PrintCode()

@@ -24,20 +24,18 @@ namespace NexumOS
             //Console.Clear();
 
             VFSManager.RegisterVFS(fileSystem);
-            File.WriteAllText(@"0:\Hello.txt", "Hello World!");
-            Console.WriteLine(File.ReadAllText(@"0:\Hello.txt"));
 
             NetworkManager.RequestIpAddress();
             Console.WriteLine("IP: " + NetworkManager.GetCurrentIp());
 
             fileLoader.Load();
-            // Console.WriteLine(File.ReadAllText(@"0:\test.bin"));
             proc = new Process(@"0:\test.bin");
+            //ProcessManager.AddProcess(proc);
 
             Sys.MouseManager.ScreenHeight = (uint)Console.WindowHeight;
             Sys.MouseManager.ScreenWidth = (uint)Console.WindowWidth;
             Sys.MouseManager.MouseSensitivity = 0.1f;
-            proc.PrintCode();
+            //proc.PrintCode();
         }
 
         protected override void Run()
@@ -45,7 +43,7 @@ namespace NexumOS
             //Console.BackgroundColor = ConsoleColor.White;
             //Console.SetCursorPosition((int)Sys.MouseManager.X, (int)Sys.MouseManager.Y);
             //Console.Write(" ");
-            proc.Execute();
+            ProcessManager.Run();
         }
 
         
